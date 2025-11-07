@@ -20,7 +20,18 @@ type InstagramStoryCollection = {
 
 const mongoUrl = () => {
   const { DB_NAME, DB_PASSWORD, DB_HOST, DB_USER } = backendCredentials();
-  return `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_NAME}?retryWrites=true&w=majority`;
+  
+  // Use mongodb:// for local development, mongodb+srv:// for cloud (Atlas)
+  const protocol = DB_HOST.includes('localhost') || DB_HOST.includes('127.0.0.1') 
+    ? 'mongodb://' 
+    : 'mongodb+srv://';
+  
+  // For local MongoDB with authentication, we need to authenticate against admin database
+  const authSource = DB_HOST.includes('localhost') || DB_HOST.includes('127.0.0.1')
+    ? '?authSource=admin&retryWrites=true&w=majority'
+    : '?retryWrites=true&w=majority';
+  
+  return `${protocol}${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_NAME}${authSource}`;
 };
 
 const clientPromise = new MongoClient(mongoUrl()).connect();
